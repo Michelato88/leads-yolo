@@ -174,9 +174,26 @@ function saveState() {
 }
 function loadState() {
   try {
+    // Migrar dados de versões anteriores
+    const old = localStorage.getItem('yolo_v2');
+    if (old) {
+      const s = JSON.parse(old);
+      Object.assign(contactedMap, s.contacts||{});
+      Object.assign(notesMap, s.notes||{});
+      localStorage.removeItem('yolo_v2');
+    }
     const raw = localStorage.getItem('yolo_v3');
     if (raw) { const s = JSON.parse(raw); Object.assign(contactedMap, s.contacts||{}); Object.assign(notesMap, s.notes||{}); Object.assign(followupMap, s.followups||{}); }
   } catch(e) {}
+
+  // Restaurar histórico: primeiros 10 PET já contatados com obs "analisando catálogo"
+  const pet10 = ['5531251540800','5522222222220','5544991035707','5511996238200','5562993842020','5521995699444','5561985990557','554330153133','5521226644020','5511478913600'];
+  pet10.forEach(tel => {
+    const id = 'pet_' + tel;
+    if (!contactedMap[id]) contactedMap[id] = true;
+    if (!notesMap[id]) notesMap[id] = 'analisando catálogo';
+  });
+  saveState();
 }
 function leadId(tab, lead) { return tab + '_' + lead.tel; }
 
