@@ -73,13 +73,28 @@ tr.contacted .btn-zap { background: #1e4d35 !important; }
 .contact-check.done { background: #0a2a15; border-color: #25D366; color: #25D366; }
 .contact-check svg { width: 13px; height: 13px; }
 
-.notes-input { width: 100%; min-width: 130px; padding: 5px 8px; background: #0e0e22; border: 1px solid #1a1a3a; border-radius: 6px; color: #8899cc; font-size: 11px; outline: none; resize: none; font-family: inherit; transition: border 0.2s; height: 28px; overflow: hidden; }
+.notes-input { width: 100%; min-width: 120px; padding: 5px 8px; background: #0e0e22; border: 1px solid #1a1a3a; border-radius: 6px; color: #8899cc; font-size: 11px; outline: none; resize: none; font-family: inherit; transition: border 0.2s; height: 28px; overflow: hidden; }
 .notes-input:focus { border-color: #2a3a6a; height: 56px; color: #c8c8e8; }
 .notes-input::placeholder { color: #2a2a4a; }
 .notes-input.has-note { border-color: #2a3a6a; color: #8899cc; }
 
-.no-results { text-align: center; padding: 40px; color: #2a2a4a; font-size: 14px; }
+/* FOLLOW-UP */
+.filter-btn.active-followup { border-color: #ffaa33; color: #ffaa33; background: #1f150a; }
+tr.highlight { background: #1a1200 !important; }
+tr.highlight td { border-bottom-color: #2a2000 !important; }
+tr.highlight .nome-cell { color: #ffd966 !important; }
+tr.highlight-pulse { animation: rowpulse 2s ease-in-out 3; }
+@keyframes rowpulse { 0%,100%{background:#1a1200} 50%{background:#2a2000} }
+.flag { font-size: 11px; margin-left: 4px; }
+.followup-input { width: 100%; min-width: 110px; padding: 5px 8px; background: #0e0e22; border: 1px solid #1a1a3a; border-radius: 6px; color: #8899cc; font-size: 11px; outline: none; font-family: inherit; transition: border 0.2s; }
+.followup-input:focus { border-color: #ffaa33; color: #ffd966; }
+.followup-input::placeholder { color: #2a2a4a; }
+.followup-input.has-date { border-color: #3a2a00; color: #ffaa33; }
+.followup-input.overdue { border-color: #6a1a1a; color: #ff6666; background: #1a0a0a; }
+.followup-input.today { border-color: #5a3a00; color: #ffcc44; background: #1a1200; }
+.followup-input.soon { border-color: #2a3a00; color: #aacc44; }
 
+.no-results { text-align: center; padding: 40px; color: #2a2a4a; font-size: 14px; }
 .loading { text-align: center; padding: 60px; color: #3a3a6a; font-size: 14px; }
 .loading span { display: inline-block; animation: pulse 1.2s ease-in-out infinite; }
 @keyframes pulse { 0%,100%{opacity:0.3} 50%{opacity:1} }
@@ -95,6 +110,7 @@ tr.contacted .btn-zap { background: #1e4d35 !important; }
   <div class="header-stats">
     <div class="stat"><div class="stat-val" id="stat-total">—</div><div class="stat-lbl">Total</div></div>
     <div class="stat"><div class="stat-val green" id="stat-done">0</div><div class="stat-lbl">Contatados</div></div>
+    <div class="stat"><div class="stat-val orange" id="stat-followup">0</div><div class="stat-lbl">Follow-ups</div></div>
     <div class="stat"><div class="stat-val orange" id="stat-pct">0%</div><div class="stat-lbl">Progresso</div></div>
   </div>
 </div>
@@ -113,11 +129,12 @@ tr.contacted .btn-zap { background: #1e4d35 !important; }
     </div>
     <button class="filter-btn" id="filter-pet-pending" onclick="toggleFilter('pet','pending')">⬜ Não contatados</button>
     <button class="filter-btn" id="filter-pet-done" onclick="toggleFilter('pet','done')">✅ Já contatados</button>
+    <button class="filter-btn" id="filter-pet-followup" onclick="toggleFilter('pet','followup')">📅 Com follow-up</button>
     <span class="count-lbl" id="count-pet"></span>
   </div>
   <div class="table-wrap">
-    <table><thead><tr><th class="num">#</th><th>Nome / Razão Social</th><th>Plataforma</th><th>Cidade</th><th>Ação</th><th style="width:32px;text-align:center">✓</th><th style="min-width:160px">Anotações</th></tr></thead>
-    <tbody id="tbody-pet"><tr><td colspan="7"><div class="loading"><span>Carregando leads…</span></div></td></tr></tbody></table>
+    <table><thead><tr><th class="num">#</th><th>Nome / Razão Social</th><th>Plataforma</th><th>Cidade</th><th>Ação</th><th style="width:32px;text-align:center">✓</th><th style="min-width:120px">📅 Follow-up</th><th style="min-width:140px">Anotações</th></tr></thead>
+    <tbody id="tbody-pet"><tr><td colspan="8"><div class="loading"><span>Carregando leads…</span></div></td></tr></tbody></table>
     <div class="no-results" id="no-pet" style="display:none">Nenhum resultado</div>
   </div>
 </div>
@@ -130,34 +147,61 @@ tr.contacted .btn-zap { background: #1e4d35 !important; }
     </div>
     <button class="filter-btn" id="filter-gen-pending" onclick="toggleFilter('gen','pending')">⬜ Não contatados</button>
     <button class="filter-btn" id="filter-gen-done" onclick="toggleFilter('gen','done')">✅ Já contatados</button>
+    <button class="filter-btn" id="filter-gen-followup" onclick="toggleFilter('gen','followup')">📅 Com follow-up</button>
     <span class="count-lbl" id="count-gen"></span>
   </div>
   <div class="table-wrap">
-    <table><thead><tr><th class="num">#</th><th>Nome / Razão Social</th><th>Plataforma</th><th>Cidade</th><th>Ação</th><th style="width:32px;text-align:center">✓</th><th style="min-width:160px">Anotações</th></tr></thead>
-    <tbody id="tbody-gen"><tr><td colspan="7"><div class="loading"><span>Carregando leads…</span></div></td></tr></tbody></table>
+    <table><thead><tr><th class="num">#</th><th>Nome / Razão Social</th><th>Plataforma</th><th>Cidade</th><th>Ação</th><th style="width:32px;text-align:center">✓</th><th style="min-width:120px">📅 Follow-up</th><th style="min-width:140px">Anotações</th></tr></thead>
+    <tbody id="tbody-gen"><tr><td colspan="8"><div class="loading"><span>Carregando leads…</span></div></td></tr></tbody></table>
     <div class="no-results" id="no-gen" style="display:none">Nenhum resultado</div>
   </div>
 </div>
 
 <script>
+const PRIORITY_TELS = ['554330153133', '5544991035707'];
 const DATA = { pet: null, gen: null };
 const filters = { pet: null, gen: null };
 const contactedMap = {};
 const notesMap = {};
+const followupMap = {};
 
 function saveState() {
-  const s = { contacts: {}, notes: {} };
+  const s = { contacts: {}, notes: {}, followups: {} };
   for (const [k,v] of Object.entries(contactedMap)) if (v) s.contacts[k] = true;
   for (const [k,v] of Object.entries(notesMap)) if (v) s.notes[k] = v;
-  localStorage.setItem('yolo_v2', JSON.stringify(s));
+  for (const [k,v] of Object.entries(followupMap)) if (v) s.followups[k] = v;
+  localStorage.setItem('yolo_v3', JSON.stringify(s));
 }
 function loadState() {
   try {
-    const raw = localStorage.getItem('yolo_v2');
-    if (raw) { const s = JSON.parse(raw); Object.assign(contactedMap, s.contacts||{}); Object.assign(notesMap, s.notes||{}); }
+    const raw = localStorage.getItem('yolo_v3');
+    if (raw) { const s = JSON.parse(raw); Object.assign(contactedMap, s.contacts||{}); Object.assign(notesMap, s.notes||{}); Object.assign(followupMap, s.followups||{}); }
   } catch(e) {}
 }
 function leadId(tab, lead) { return tab + '_' + lead.tel; }
+
+function parseFollowup(val) {
+  if (!val) return null;
+  val = val.trim();
+  const dmY = val.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (dmY) return new Date(+dmY[3], +dmY[2]-1, +dmY[1]);
+  const dm = val.match(/^(\d{1,2})\/(\d{1,2})$/);
+  if (dm) { const n = new Date(); return new Date(n.getFullYear(), +dm[2]-1, +dm[1]); }
+  const dias = val.match(/^(\d+)\s*(dias?)?$/i);
+  if (dias) { const d = new Date(); d.setDate(d.getDate() + +dias[1]); return d; }
+  return null;
+}
+function followupClass(val) {
+  if (!val) return '';
+  const d = parseFollowup(val);
+  if (!d) return 'has-date';
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diff = Math.floor((d - today) / 86400000);
+  if (diff < 0) return 'overdue';
+  if (diff === 0) return 'today';
+  if (diff <= 3) return 'soon';
+  return 'has-date';
+}
 
 function tagHtml(plat) {
   if (!plat) return '';
@@ -182,15 +226,26 @@ function render(tab) {
   leads.forEach((lead, idx) => {
     const id = leadId(tab, lead);
     const contacted = !!contactedMap[id];
+    const note = notesMap[id] || '';
+    const followup = followupMap[id] || '';
+    const isPriority = PRIORITY_TELS.includes(lead.tel);
+    const hasFollowup = followup.trim().length > 0;
+
     if (filter === 'pending' && contacted) return;
     if (filter === 'done' && !contacted) return;
+    if (filter === 'followup' && !hasFollowup) return;
+
     const searchStr = (lead.nome + ' ' + lead.razao + ' ' + lead.cidade + ' ' + lead.plat).toLowerCase();
     if (search && !searchStr.includes(search)) return;
-    const note = notesMap[id] || '';
+
     shown++;
-    rows.push(`<tr id="row-${id}" class="${contacted ? 'contacted' : ''}">
+    const fClass = followupClass(followup);
+    const rowClass = contacted ? 'contacted' : (isPriority ? 'highlight highlight-pulse' : '');
+    const priorityFlag = isPriority && !contacted ? ' <span class="flag" title="Follow-up prioritário">🔔</span>' : '';
+
+    rows.push(`<tr id="row-${id}" class="${rowClass}">
       <td class="num">${idx+1}</td>
-      <td class="nome-cell">${lead.nome}${lead.razao && lead.razao !== lead.nome ? `<small>${lead.razao}</small>` : ''}</td>
+      <td class="nome-cell">${lead.nome}${priorityFlag}${lead.razao && lead.razao !== lead.nome ? `<small>${lead.razao}</small>` : ''}</td>
       <td>${tagHtml(lead.plat)}</td>
       <td class="cidade">${lead.cidade}</td>
       <td><a class="btn-zap" href="${lead.link}" target="_blank" onclick="onZapClick('${id}','${tab}')">
@@ -198,6 +253,9 @@ function render(tab) {
         WhatsApp</a></td>
       <td style="text-align:center"><button class="contact-check ${contacted ? 'done' : ''}" onclick="toggleContacted('${id}','${tab}')" title="Marcar como contatado">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></button></td>
+      <td><input type="text" class="followup-input ${followup ? fClass : ''}" placeholder="DD/MM ou N dias"
+        value="${followup}" onchange="saveFollowup('${id}','${tab}',this.value)"
+        title="Ex: 15/04, 15/04/2025 ou 3 dias"></td>
       <td><textarea class="notes-input ${note ? 'has-note' : ''}" placeholder="Anotação…" rows="1"
         onchange="saveNote('${id}',this.value)" oninput="autoResize(this)">${note}</textarea></td>
     </tr>`);
@@ -212,12 +270,15 @@ function render(tab) {
 function onZapClick(id, tab) { contactedMap[id] = true; saveState(); setTimeout(() => render(tab), 200); }
 function toggleContacted(id, tab) { contactedMap[id] = !contactedMap[id]; saveState(); render(tab); }
 function saveNote(id, val) { notesMap[id] = val.trim(); saveState(); }
+function saveFollowup(id, tab, val) { followupMap[id] = val.trim(); saveState(); render(tab); }
 function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.max(28, el.scrollHeight) + 'px'; }
 
 function toggleFilter(tab, type) {
   filters[tab] = filters[tab] === type ? null : type;
-  document.getElementById('filter-' + tab + '-pending').classList.toggle('active', filters[tab] === 'pending');
-  document.getElementById('filter-' + tab + '-done').classList.toggle('active', filters[tab] === 'done');
+  ['pending','done','followup'].forEach(t => {
+    const btn = document.getElementById('filter-' + tab + '-' + t);
+    if (btn) btn.className = 'filter-btn' + (filters[tab] === t ? (t === 'followup' ? ' active-followup' : ' active') : '');
+  });
   render(tab);
 }
 
@@ -234,9 +295,11 @@ function updateStats() {
   const pet = DATA.pet || [], gen = DATA.gen || [];
   const total = pet.length + gen.length;
   const done = [...pet.map(l => leadId('pet',l)), ...gen.map(l => leadId('gen',l))].filter(id => contactedMap[id]).length;
+  const fups = Object.values(followupMap).filter(v => v && v.trim()).length;
   const pct = total > 0 ? Math.round(done/total*100) : 0;
   document.getElementById('stat-total').textContent = total.toLocaleString('pt-BR');
   document.getElementById('stat-done').textContent = done.toLocaleString('pt-BR');
+  document.getElementById('stat-followup').textContent = fups;
   document.getElementById('stat-pct').textContent = pct + '%';
   document.getElementById('progress-bar').style.width = pct + '%';
   if (DATA.pet) { const d = pet.filter(l => contactedMap[leadId('pet',l)]).length; document.getElementById('badge-pet').textContent = d > 0 ? `${pet.length} ✅${d}` : pet.length; }
@@ -248,7 +311,7 @@ function loadData(tab) {
     .then(r => r.json())
     .then(data => { DATA[tab] = data; render(tab); updateStats(); })
     .catch(() => {
-      document.getElementById('tbody-' + tab).innerHTML = '<tr><td colspan="7"><div class="loading" style="color:#cc4444">Erro ao carregar dados. Verifique se os arquivos JSON estão no repositório.</div></td></tr>';
+      document.getElementById('tbody-' + tab).innerHTML = `<tr><td colspan="8"><div class="loading" style="color:#cc4444">Erro ao carregar dados. Verifique se os arquivos JSON estão no repositório.</div></td></tr>`;
     });
 }
 
