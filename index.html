@@ -1,1 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leads YOLO — WhatsApp</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; background: #0d0d1a; min-height: 100vh; color: #e8e8f0; }
 
+.header { background: linear-gradient(135deg, #000066 0%, #0a0a2e 100%); padding: 18px 28px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1a1a4a; gap: 16px; flex-wrap: wrap; }
+.header-left h1 { font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
+.header-left p { font-size: 12px; color: #6677cc; margin-top: 2px; }
+.header-stats { display: flex; gap: 20px; }
+.stat { text-align: center; }
+.stat-val { font-size: 22px; font-weight: 700; color: #4fa3ff; line-height: 1; }
+.stat-lbl { font-size: 10px; color: #556; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 2px; }
+.stat-val.green { color: #25D366; }
+.stat-val.orange { color: #ffaa33; }
+
+.tabs { display: flex; background: #0d0d1a; padding: 16px 28px 0; border-bottom: 1px solid #1a1a3a; }
+.tab { padding: 10px 22px; cursor: pointer; font-size: 13px; font-weight: 600; color: #556; border-bottom: 3px solid transparent; transition: all 0.2s; user-select: none; letter-spacing: 0.3px; }
+.tab:hover { color: #aac; }
+.tab.active { color: #fff; border-bottom-color: #4fa3ff; }
+.tab .badge { display: inline-block; background: #1a1a3a; color: #6677cc; border-radius: 10px; padding: 1px 7px; font-size: 10px; margin-left: 6px; font-weight: 600; }
+.tab.active .badge { background: #1a2a5a; color: #4fa3ff; }
+
+.progress-bar-wrap { height: 3px; background: #1a1a3a; margin: 0 28px; overflow: hidden; }
+.progress-bar { height: 100%; background: linear-gradient(90deg, #25D366, #4fa3ff); transition: width 0.4s; }
+
+.controls { display: flex; gap: 10px; padding: 14px 28px; align-items: center; flex-wrap: wrap; background: #0d0d1a; }
+.search-wrap { position: relative; flex: 1; min-width: 220px; }
+.search-wrap svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); opacity: 0.35; pointer-events: none; }
+input[type=text] { width: 100%; padding: 8px 14px 8px 36px; background: #141428; border: 1px solid #2a2a4a; border-radius: 8px; color: #e8e8f0; font-size: 13px; outline: none; transition: border 0.2s; }
+input[type=text]:focus { border-color: #4fa3ff; }
+input[type=text]::placeholder { color: #3a3a5a; }
+.filter-btn { padding: 8px 14px; border-radius: 8px; border: 1px solid #2a2a4a; background: #141428; color: #889; font-size: 12px; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+.filter-btn:hover { border-color: #4a4a7a; color: #aab; }
+.filter-btn.active { border-color: #25D366; color: #25D366; background: #0a1f12; }
+.count-lbl { font-size: 12px; color: #445; white-space: nowrap; }
+
+.panel { display: none; padding: 0 28px 28px; }
+.panel.active { display: block; }
+
+.table-wrap { background: #111124; border-radius: 12px; border: 1px solid #1a1a3a; overflow: hidden; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 700px; }
+thead { background: #0e0e22; }
+th { text-align: left; padding: 10px 14px; font-size: 10px; font-weight: 600; color: #3a3a6a; text-transform: uppercase; letter-spacing: 0.7px; border-bottom: 1px solid #1a1a3a; white-space: nowrap; }
+td { padding: 9px 14px; border-bottom: 1px solid #131326; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #13132a; }
+
+tr.contacted td { opacity: 0.55; }
+tr.contacted .nome-cell { color: #4466aa !important; }
+tr.contacted .btn-zap { background: #1e4d35 !important; }
+
+.num { color: #2a2a5a; font-size: 11px; width: 36px; }
+.nome-cell { font-weight: 600; color: #c8c8e8; max-width: 260px; }
+.nome-cell small { display: block; font-weight: 400; font-size: 11px; color: #3a3a6a; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 10px; font-weight: 600; letter-spacing: 0.3px; white-space: nowrap; }
+.tag-ml { background: #1a1f3a; color: #6677dd; }
+.tag-sh { background: #1a2a1a; color: #55aa66; }
+.tag-am { background: #2a1a0a; color: #dd8833; }
+.tag-other { background: #1a1a2a; color: #556; }
+.cidade { font-size: 11px; color: #3a3a6a; white-space: nowrap; }
+
+.btn-zap { display: inline-flex; align-items: center; gap: 5px; background: #128C7E; color: #fff; text-decoration: none; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; transition: all 0.15s; border: none; cursor: pointer; }
+.btn-zap:hover { background: #25D366; }
+.btn-zap svg { width: 13px; height: 13px; fill: #fff; flex-shrink: 0; }
+
+.contact-check { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; border: 1px solid #2a2a4a; background: transparent; cursor: pointer; transition: all 0.2s; color: #2a2a4a; }
+.contact-check:hover { border-color: #25D366; color: #25D366; }
+.contact-check.done { background: #0a2a15; border-color: #25D366; color: #25D366; }
+.contact-check svg { width: 13px; height: 13px; }
+
+.notes-input { width: 100%; min-width: 130px; padding: 5px 8px; background: #0e0e22; border: 1px solid #1a1a3a; border-radius: 6px; color: #8899cc; font-size: 11px; outline: none; resize: none; font-family: inherit; transition: border 0.2s; height: 28px; overflow: hidden; }
+.notes-input:focus { border-color: #2a3a6a; height: 56px; color: #c8c8e8; }
+.notes-input::placeholder { color: #2a2a4a; }
+.notes-input.has-note { border-color: #2a3a6a; color: #8899cc; }
+
+.no-results { text-align: center; padding: 40px; color: #2a2a4a; font-size: 14px; }
+
+.loading { text-align: center; padding: 60px; color: #3a3a6a; font-size: 14px; }
+.loading span { display: inline-block; animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:0.3} 50%{opacity:1} }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>🐾 Leads YOLO — WhatsApp</h1>
+    <p>Clique no botão verde para abrir o WhatsApp com a mensagem preenchida</p>
+  </div>
+  <div class="header-stats">
+    <div class="stat"><div class="stat-val" id="stat-total">—</div><div class="stat-lbl">Total</div></div>
+    <div class="stat"><div class="stat-val green" id="stat-done">0</div><div class="stat-lbl">Contatados</div></div>
+    <div class="stat"><div class="stat-val orange" id="stat-pct">0%</div><div class="stat-lbl">Progresso</div></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('pet')" id="tab-pet">🐶 Segmento PET <span class="badge" id="badge-pet">…</span></div>
+  <div class="tab" onclick="switchTab('gen')" id="tab-gen">📦 Generalistas <span class="badge" id="badge-gen">…</span></div>
+</div>
+<div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+
+<div class="panel active" id="panel-pet">
+  <div class="controls">
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" placeholder="Buscar nome, cidade, plataforma…" oninput="render('pet')" id="search-pet">
+    </div>
+    <button class="filter-btn" id="filter-pet-pending" onclick="toggleFilter('pet','pending')">⬜ Não contatados</button>
+    <button class="filter-btn" id="filter-pet-done" onclick="toggleFilter('pet','done')">✅ Já contatados</button>
+    <span class="count-lbl" id="count-pet"></span>
+  </div>
+  <div class="table-wrap">
+    <table><thead><tr><th class="num">#</th><th>Nome / Razão Social</th><th>Plataforma</th><th>Cidade</th><th>Ação</th><th style="width:32px;text-align:center">✓</th><th style="min-width:160px">Anotações</th></tr></thead>
+    <tbody id="tbody-pet"><tr><td colspan="7"><div class="loading"><span>Carregando leads…</span></div></td></tr></tbody></table>
+    <div class="no-results" id="no-pet" style="display:none">Nenhum resultado</div>
+  </div>
+</div>
+
+<div class="panel" id="panel-gen">
+  <div class="controls">
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" placeholder="Buscar nome, cidade, plataforma…" oninput="render('gen')" id="search-gen">
+    </div>
+    <button class="filter-btn" id="filter-gen-pending" onclick="toggleFilter('gen','pending')">⬜ Não contatados</button>
+    <button class="filter-btn" id="filter-gen-done" onclick="toggleFilter('gen','done')">✅ Já contatados</button>
+    <span class="count-lbl" id="count-gen"></span>
+  </div>
+  <div class="table-wrap">
+    <table><thead><tr><th class="num">#</th><th>Nome / Razão Social</th><th>Plataforma</th><th>Cidade</th><th>Ação</th><th style="width:32px;text-align:center">✓</th><th style="min-width:160px">Anotações</th></tr></thead>
+    <tbody id="tbody-gen"><tr><td colspan="7"><div class="loading"><span>Carregando leads…</span></div></td></tr></tbody></table>
+    <div class="no-results" id="no-gen" style="display:none">Nenhum resultado</div>
+  </div>
+</div>
+
+<script>
+const DATA = { pet: null, gen: null };
+const filters = { pet: null, gen: null };
+const contactedMap = {};
+const notesMap = {};
+
+function saveState() {
+  const s = { contacts: {}, notes: {} };
+  for (const [k,v] of Object.entries(contactedMap)) if (v) s.contacts[k] = true;
+  for (const [k,v] of Object.entries(notesMap)) if (v) s.notes[k] = v;
+  localStorage.setItem('yolo_v2', JSON.stringify(s));
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem('yolo_v2');
+    if (raw) { const s = JSON.parse(raw); Object.assign(contactedMap, s.contacts||{}); Object.assign(notesMap, s.notes||{}); }
+  } catch(e) {}
+}
+function leadId(tab, lead) { return tab + '_' + lead.tel; }
+
+function tagHtml(plat) {
+  if (!plat) return '';
+  const p = plat.toLowerCase();
+  let cls = 'tag-other';
+  if (p.includes('mercado')) cls = 'tag-ml';
+  else if (p.includes('shopee')) cls = 'tag-sh';
+  else if (p.includes('amazon')) cls = 'tag-am';
+  return `<span class="tag ${cls}">${plat}</span>`;
+}
+
+function render(tab) {
+  if (!DATA[tab]) return;
+  const search = document.getElementById('search-' + tab).value.trim().toLowerCase();
+  const filter = filters[tab];
+  const tbody = document.getElementById('tbody-' + tab);
+  const noRes = document.getElementById('no-' + tab);
+  const leads = DATA[tab];
+  let shown = 0;
+  const rows = [];
+
+  leads.forEach((lead, idx) => {
+    const id = leadId(tab, lead);
+    const contacted = !!contactedMap[id];
+    if (filter === 'pending' && contacted) return;
+    if (filter === 'done' && !contacted) return;
+    const searchStr = (lead.nome + ' ' + lead.razao + ' ' + lead.cidade + ' ' + lead.plat).toLowerCase();
+    if (search && !searchStr.includes(search)) return;
+    const note = notesMap[id] || '';
+    shown++;
+    rows.push(`<tr id="row-${id}" class="${contacted ? 'contacted' : ''}">
+      <td class="num">${idx+1}</td>
+      <td class="nome-cell">${lead.nome}${lead.razao && lead.razao !== lead.nome ? `<small>${lead.razao}</small>` : ''}</td>
+      <td>${tagHtml(lead.plat)}</td>
+      <td class="cidade">${lead.cidade}</td>
+      <td><a class="btn-zap" href="${lead.link}" target="_blank" onclick="onZapClick('${id}','${tab}')">
+        <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.99 0C5.373 0 0 5.373 0 11.99c0 2.112.552 4.094 1.516 5.81L.044 23.956l6.321-1.456A11.942 11.942 0 0011.99 24C18.607 24 24 18.627 24 11.99 24 5.373 18.607 0 11.99 0zm0 21.818a9.808 9.808 0 01-5.003-1.366l-.358-.213-3.752.865.93-3.664-.233-.374a9.83 9.83 0 01-1.504-5.266c0-5.43 4.418-9.845 9.845-9.845 5.43 0 9.845 4.415 9.845 9.845 0 5.43-4.415 9.818-9.77 9.818z"/></svg>
+        WhatsApp</a></td>
+      <td style="text-align:center"><button class="contact-check ${contacted ? 'done' : ''}" onclick="toggleContacted('${id}','${tab}')" title="Marcar como contatado">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></button></td>
+      <td><textarea class="notes-input ${note ? 'has-note' : ''}" placeholder="Anotação…" rows="1"
+        onchange="saveNote('${id}',this.value)" oninput="autoResize(this)">${note}</textarea></td>
+    </tr>`);
+  });
+
+  tbody.innerHTML = rows.join('');
+  noRes.style.display = shown === 0 ? 'block' : 'none';
+  document.getElementById('count-' + tab).textContent = `${shown} de ${leads.length} leads`;
+  updateStats();
+}
+
+function onZapClick(id, tab) { contactedMap[id] = true; saveState(); setTimeout(() => render(tab), 200); }
+function toggleContacted(id, tab) { contactedMap[id] = !contactedMap[id]; saveState(); render(tab); }
+function saveNote(id, val) { notesMap[id] = val.trim(); saveState(); }
+function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.max(28, el.scrollHeight) + 'px'; }
+
+function toggleFilter(tab, type) {
+  filters[tab] = filters[tab] === type ? null : type;
+  document.getElementById('filter-' + tab + '-pending').classList.toggle('active', filters[tab] === 'pending');
+  document.getElementById('filter-' + tab + '-done').classList.toggle('active', filters[tab] === 'done');
+  render(tab);
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+  if (!DATA[tab]) loadData(tab);
+  else render(tab);
+}
+
+function updateStats() {
+  const pet = DATA.pet || [], gen = DATA.gen || [];
+  const total = pet.length + gen.length;
+  const done = [...pet.map(l => leadId('pet',l)), ...gen.map(l => leadId('gen',l))].filter(id => contactedMap[id]).length;
+  const pct = total > 0 ? Math.round(done/total*100) : 0;
+  document.getElementById('stat-total').textContent = total.toLocaleString('pt-BR');
+  document.getElementById('stat-done').textContent = done.toLocaleString('pt-BR');
+  document.getElementById('stat-pct').textContent = pct + '%';
+  document.getElementById('progress-bar').style.width = pct + '%';
+  if (DATA.pet) { const d = pet.filter(l => contactedMap[leadId('pet',l)]).length; document.getElementById('badge-pet').textContent = d > 0 ? `${pet.length} ✅${d}` : pet.length; }
+  if (DATA.gen) { const d = gen.filter(l => contactedMap[leadId('gen',l)]).length; document.getElementById('badge-gen').textContent = d > 0 ? `${gen.length} ✅${d}` : gen.length; }
+}
+
+function loadData(tab) {
+  fetch(tab + '.json')
+    .then(r => r.json())
+    .then(data => { DATA[tab] = data; render(tab); updateStats(); })
+    .catch(() => {
+      document.getElementById('tbody-' + tab).innerHTML = '<tr><td colspan="7"><div class="loading" style="color:#cc4444">Erro ao carregar dados. Verifique se os arquivos JSON estão no repositório.</div></td></tr>';
+    });
+}
+
+loadState();
+loadData('pet');
+</script>
+</body>
+</html>
